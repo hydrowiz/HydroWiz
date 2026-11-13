@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HydroWiz | Pipe Flow Hydraulics, Head Loss & Pump Calculator for Android</title>
+  <meta name="description" content="Calculate pipe friction head loss, pressure drop, pipe sizing, fittings losses, pump total head, and pump operating points on site or at your desk. Built on Darcy-Weisbach & Colebrook-White equations. 100% offline." />
+  <meta name="keywords" content="pipe flow calculator, Darcy-Weisbach, Colebrook-White, friction head loss, pressure drop, pump operating point, total dynamic head, hydraulic calculator, irrigation, dewatering, Android" />
+  
+  <style>
+    :root {
+      --primary: #0f4c81;
+      --primary-dark: #093256;
+      --accent: #008080;
+      --accent-hover: #006666;
+      --bg-light: #f8fafc;
+      --bg-white: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --radius: 8px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-white);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Navigation */
+    header {
+      background: var(--bg-white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 68px;
+    }
+
+    .logo {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 24px;
+      align-items: center;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+      border: 2px solid var(--primary);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(180deg, #f0f6fc 0%, #ffffff 100%);
+      padding: 72px 0 64px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      display: inline-block;
+      background: #e0eef9;
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.18;
+      color: #0f172a;
+      max-width: 820px;
+      margin: 0 auto 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .trust-bar {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Sections */
+    section {
+      padding: 68px 0;
+    }
+
+    section.alt-bg {
+      background-color: var(--bg-light);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 44px;
+    }
+
+    .section-header h2 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 12px;
+      letter-spacing: -0.015em;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    /* Value Strip */
+    .value-box {
+      max-width: 820px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .value-box h2 {
+      font-size: 1.65rem;
+      margin-bottom: 14px;
+      color: #0f172a;
+    }
+
+    .value-box p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+    }
+
+    /* Grid Cards */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 24px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+    }
+
+    .card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      color: var(--primary);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.96rem;
+    }
+
+    /* Comparison Table */
+    .table-wrapper {
+      overflow-x: auto;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1.05rem;
+    }
+
+    th.center, td.center {
+      text-align: center;
+      width: 22%;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .check {
+      color: #0d9488;
+      font-weight: 800;
+      font-size: 1.2rem;
+    }
+
+    .dash {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .table-cta-row td {
+      background-color: #f8fafc;
+      padding: 20px;
+    }
+
+    /* CTA Banner */
+    .cta-banner {
+      background: var(--primary);
+      color: #ffffff;
+      text-align: center;
+      padding: 64px 20px;
+    }
+
+    .cta-banner h2 {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .cta-banner p {
+      color: #dbeafe;
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 28px;
+    }
+
+    .btn-white {
+      background: #ffffff;
+      color: var(--primary);
+      border: 2px solid #ffffff;
+    }
+
+    .btn-white:hover {
+      background: #f1f5f9;
+    }
+
+    /* Footer */
+    footer {
+      background: #0f172a;
+      color: #94a3b8;
+      padding: 32px 0;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: #cbd5e1;
+      text-decoration: underline;
+    }
+
+    /* Responsive Nav */
+    @media (max-width: 720px) {
+      nav ul li:not(:last-child) {
+        display: none;
+      }
+      .hero {
+        padding: 52px 0 48px;
+      }
+      section {
+        padding: 52px 0;
+      }
+      th, td {
+        padding: 12px 14px;
+        font-size: 0.92rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="container nav-inner">
+      <a href="#" class="logo">Hydro<span>Wiz</span></a>
+      <nav>
+        <ul>
+          <li><a href="#capabilities">Capabilities</a></li>
+          <li><a href="#applications">Applications</a></li>
+          <li><a href="#compare">Lite vs. Pro</a></li>
+          <li><a href="https://play.google.com/store/apps/details?id=com.hotmail.renzullo.antonio.hydrowizhqdl" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Google Play</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="eyebrow">Civil &amp; Mechanical Hydraulic Engineering Toolkit</div>
+      <h1>Accurate Pipe Flow &amp; Pump Calculations—Anywhere the Job Takes You.</h1>
+      <p>Solve pressure drop, friction head loss, pipe sizing, fittings losses, pump total head, and pump operating points in seconds using the Darcy-Weisbach and Colebrook-White equations. No spreadsheets, no subscriptions, and 100% offline.</p>
+      <div class="hero-actions">
+        <a href="https://play.google.com/store/apps/details?id=com.hotmail.renzullo.antonio.hydrowizhqdl" target="_blank" rel="noopener" class="btn btn-primary">Download HydroWiz Pro</a>
+        <a href="https://play.google.com/store/apps/details?id=com.hotmail.renzullo.antonio.hydrowizhqdlfree" target="_blank" rel="noopener" class="btn btn-outline">Try HydroWiz Lite (Free)</a>
+      </div>
+      <div class="trust-bar">30,000+ Installs Worldwide &bull; Metric (SI) &amp; US Imperial Units &bull; 100% Offline</div>
+    </div>
+  </section>
+
+  <!-- Problem / Value Strip -->
+  <section>
+    <div class="container">
+      <div class="value-box">
+        <h2>Stop Carrying Spreadsheets Into the Field</h2>
+        <p>Whether you are sizing an overland dewatering line on a remote mine site, checking pump duty points in a plant room, or verifying pressure drop along an irrigation mainline, rough rules of thumb cost money. HydroWiz puts rigorous, first-principles fluid mechanics in your pocket—delivering instant answers without an internet connection.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Capabilities -->
+  <section id="capabilities" class="alt-bg">
+    <div class="container">
+      <div class="section-header">
+        <h2>Core Hydraulic Calculations</h2>
+        <p>Fast, iterative solutions for single-pipe systems and pump duty analysis.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Single-Pipe PQDL Solver</h3>
+          <p>Solve for any unknown variable—Pressure Loss (&Delta;P), Flow Rate (Q), Internal Pipe Diameter (D), or Pipe Length (L)—using the Darcy-Weisbach, Colebrook-White, and Bernoulli equations.</p>
+        </div>
+        <div class="card">
+          <h3>Pump Total Head (Pro)</h3>
+          <p>Determine exact total dynamic head across suction and discharge conditions, accounting for static lift, pressure differentials, and pipe friction losses.</p>
+        </div>
+        <div class="card">
+          <h3>Pump Operating Point (Pro)</h3>
+          <p>Evaluate your system head curve against pump performance data to find the true operating duty point for your pipeline layout.</p>
+        </div>
+        <div class="card">
+          <h3>Fittings &amp; Minor Losses</h3>
+          <p>Include resistance coefficients (K-factors) for commonly used valves, bends, tees, reducers, and pipe entrances directly in your calculation.</p>
+        </div>
+        <div class="card">
+          <h3>Pipe &amp; Fluid Libraries</h3>
+          <p>Select from standard pipe material roughness values (PVC, HDPE, Steel, Ductile Iron, Copper, Concrete) and fluid properties including fresh water and seawater across temperatures.</p>
+        </div>
+        <div class="card">
+          <h3>Metric &amp; Imperial Units</h3>
+          <p>Switch effortlessly between SI/Metric and US Customary/Imperial units at any time—including L/s, m&sup3;/h, GPM, bar, kPa, psi, meters, and feet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Industry Applications -->
+  <section id="applications">
+    <div class="container">
+      <div class="section-header">
+        <h2>Built for Real-World Trades &amp; Engineering</h2>
+        <p>Practical hydraulic verification for field supervisors, contractors, and design engineers.</p>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Mining &amp; Dewatering</h3>
+          <p>Size overland poly/HDPE pipelines, calculate pump total head over long runs, and verify friction losses in remote locations with zero cell reception.</p>
+        </div>
+        <div class="card">
+          <h3>Irrigation &amp; Agriculture</h3>
+          <p>Design mainline and lateral pipe runs, verify sprinkler and emitter operating pressures, and match pumps to system head curves.</p>
+        </div>
+        <div class="card">
+          <h3>Water Supply &amp; Civil Works</h3>
+          <p>Analyze gravity mains, rising mains, elevation head changes, and pressure losses between known points with transparent hydraulic outputs.</p>
+        </div>
+        <div class="card">
+          <h3>HVAC, Hydronics &amp; Plumbing</h3>
+          <p>Check flow velocities, size distribution piping, and account for valve and fitting losses in commercial and industrial water loops.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lite vs. Pro Comparison -->
+  <section id="compare" class="alt-bg">
+    <div class="container">
+      <div class="section-header">
+        <h2>Choose Your Edition</h2>
+        <p>Start free with full single-pipe calculations, or unlock pump calculations with a single one-time purchase.</p>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="center">HydroWiz Lite</th>
+              <th class="center">HydroWiz Pro</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Price</strong></td>
+              <td class="center"><strong>Free</strong></td>
+              <td class="center"><strong>One-Time Purchase</strong></td>
+            </tr>
+            <tr>
+              <td>Darcy-Weisbach &amp; Colebrook-White Solver (PQDL)</td>
+              <td class="center"><span class="check">&#10003;</span></td>
+              <td class="center"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+              <td>Pipe Materials &amp; Roughness Library</td>
+              <td class="center"><span class="check">&#10003;</span></td>
+              <td class="center"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+              <td>Fittings, Valves &amp; Minor Losses Library</td>
+              <td class="center"><span class="check">&#10003;</span></td>
+              <td class="center"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+              <td>Fluid Properties &amp; Temperature Adjustments</td>
+              <td class="center"><span class="check">&#10003;</span></td>
+              <td class="center"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+              <td>Metric (SI) &amp; US Imperial Unit Conversions</td>
+              <td class="center"><span class="check">&#10003;</span></td>
+              <td class="center"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+              <td>100% Offline Access &amp; Ad-Free</td>
+              <td class="center"><span class="check">&#10003;</span></td>
+              <td class="center"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+              <td><strong>Pump Total Head Calculation</strong></td>
+              <td class="center"><span class="dash">&mdash;</span></td>
+              <td class="center"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr>
+              <td><strong>Pump Operating Point &amp; System Curves</strong></td>
+              <td class="center"><span class="dash">&mdash;</span></td>
+              <td class="center"><span class="check">&#10003;</span></td>
+            </tr>
+            <tr class="table-cta-row">
+              <td></td>
+              <td class="center">
+                <a href="https://play.google.com/store/apps/details?id=com.hotmail.renzullo.antonio.hydrowizhqdlfree" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Download Lite</a>
+              </td>
+              <td class="center">
+                <a href="https://play.google.com/store/apps/details?id=com.hotmail.renzullo.antonio.hydrowizhqdl" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Get Pro</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="cta-banner">
+    <div class="container">
+      <h2>Ready to Simplify Your Hydraulic Calculations?</h2>
+      <p>Download HydroWiz on Google Play for fast, reliable pipe flow and pump calculations in the field or at your desk.</p>
+      <div class="hero-actions">
+        <a href="https://play.google.com/store/apps/details?id=com.hotmail.renzullo.antonio.hydrowizhqdl" target="_blank" rel="noopener" class="btn btn-white">Get HydroWiz Pro on Google Play</a>
+        <a href="https://play.google.com/store/apps/details?id=com.hotmail.renzullo.antonio.hydrowizhqdlfree" target="_blank" rel="noopener" class="btn btn-outline" style="color: #ffffff; border-color: #ffffff;">Download Lite (Free)</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 HydroWiz Pipe Flow Hydraulics &bull; Developed by Antonio &ldquo;Tony&rdquo; Renzullo</p>
+      <p style="margin-top: 8px;">Support &amp; Enquiries: <a href="mailto:tonyarenzullo@gmail.com">tonyarenzullo@gmail.com</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>
