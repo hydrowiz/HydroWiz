@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://hydrowiz.github.io/HydroWiz/sitemap.xml
